@@ -1,0 +1,7 @@
+[watch]
+ignore = ["node_modules", "package.json", "package-lock.json"]
+
+[[hooks]]
+stage = "pre_build"
+command = "npm"
+command_arguments = ["install"]

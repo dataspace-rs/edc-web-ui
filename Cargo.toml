@@ -1,0 +1,26 @@
+[package]
+name = "edc-web-ui"
+version = "0.0.1"
+edition = "2024"
+license = "Apache-2.0"
+description= "A Rust Web interface with patternfly-yew client for EDC"
+repository = "https://github.com/dataspace-rs/edc-ui"
+keywords = ["dataspace", "http"]
+categories = []
+readme = "README.md"
+
+[dependencies]
+console_error_panic_hook = "0.1"
+console_log = "1"
+edc-connector-client = "0.4.0"
+fern = "0.7"
+log = "0.4.27"
+patternfly-yew = { version = "0.6", features = ["experimental"] }
+strum = { version = "0.26.3", features = ["derive"] }
+wasm-cookies = "0.2"
+web-sys = "0.3"
+yew = "0.21"
+yew-router = "0.18"
+
+[build-dependencies]
+built = "0.7"

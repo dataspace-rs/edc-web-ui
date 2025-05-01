@@ -1,0 +1,13 @@
+diff --git a/node_modules/@patternfly/patternfly/assets/fontawesome/_stacked.scss b/node_modules/@patternfly/patternfly/assets/fontawesome/_stacked.scss
+index affb2fd..48f1eec 100644
+--- a/node_modules/@patternfly/patternfly/assets/fontawesome/_stacked.scss
++++ b/node_modules/@patternfly/patternfly/assets/fontawesome/_stacked.scss
+@@ -7,7 +7,7 @@
+   line-height: 2em;
+   position: relative;
+   vertical-align: middle;
+-  width: ($fa-fw-width*2);
++  width: ($fa-fw-width);
+ }
+ 
+ .#{$fa-css-prefix}-stack-1x,
