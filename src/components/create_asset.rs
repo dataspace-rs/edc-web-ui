@@ -15,6 +15,8 @@ pub fn CreateAsset() -> Html {
   let content_type = use_state(|| "".to_string());
   let proxy_path = use_state(|| false);
   let proxy_query_params = use_state(|| false);
+  let proxy_method = use_state(|| false);
+  let proxy_body = use_state(|| false);
   let headers = use_state(HashMap::<String, String>::new);
 
   let onsubmit = use_callback(
@@ -26,6 +28,8 @@ pub fn CreateAsset() -> Html {
       content_type.clone(),
       proxy_path.clone(),
       proxy_query_params.clone(),
+      proxy_method.clone(),
+      proxy_body.clone(),
       headers.clone(),
     ),
     |event: SubmitEvent,
@@ -37,6 +41,8 @@ pub fn CreateAsset() -> Html {
       content_type,
       proxy_path,
       proxy_query_params,
+      proxy_method,
+      proxy_body,
       headers,
     )| {
       event.prevent_default();
@@ -47,6 +53,8 @@ pub fn CreateAsset() -> Html {
       let content_type = (**content_type).clone();
       let proxy_path = **proxy_path;
       let proxy_query_params = **proxy_query_params;
+      let proxy_method = **proxy_method;
+      let proxy_body = **proxy_body;
       let headers = (**headers).clone();
       let edc_connector_context = edc_connector_context.clone();
 
@@ -58,6 +66,14 @@ pub fn CreateAsset() -> Html {
           .property(
             "proxyQueryParams",
             if proxy_query_params { "true" } else { "false" },
+          )
+          .property(
+            "proxyMethod",
+            if proxy_method { "true" } else { "false" },
+          )
+          .property(
+            "proxyBody",
+            if proxy_body { "true" } else { "false" },
           );
 
         for (key, value) in &headers {
@@ -128,6 +144,22 @@ pub fn CreateAsset() -> Html {
     })
   };
 
+  let onchange_proxy_method = {
+    let proxy_method = proxy_method.clone();
+
+    use_callback((), move |value, _| {
+      proxy_method.set(value);
+    })
+  };
+
+  let onchange_proxy_body = {
+    let proxy_body = proxy_body.clone();
+
+    use_callback((), move |value, _| {
+      proxy_body.set(value);
+    })
+  };
+
   let disabled = false;
 
   html!(
@@ -190,6 +222,24 @@ pub fn CreateAsset() -> Html {
         <Switch
           checked={*proxy_query_params}
           onchange={onchange_proxy_query_params}
+          />
+      </FormGroup>
+
+      <FormGroup
+        label={"Proxy Method"}
+        >
+        <Switch
+          checked={*proxy_method}
+          onchange={onchange_proxy_method}
+          />
+      </FormGroup>
+
+      <FormGroup
+        label={"Proxy Body"}
+        >
+        <Switch
+          checked={*proxy_body}
+          onchange={onchange_proxy_body}
           />
       </FormGroup>
 
