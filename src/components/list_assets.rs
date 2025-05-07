@@ -50,7 +50,9 @@ pub fn ListAssetsInner() -> HtmlResult {
       <TableColumn<Columns> label="ID" index={Columns::Id} />
       <TableColumn<Columns> label="Base URL" index={Columns::BaseUrl} />
       <TableColumn<Columns> label="Proxy Path" index={Columns::ProxyPath} />
-      <TableColumn<Columns> label="Query Path" index={Columns::QueryPath} />
+      <TableColumn<Columns> label="Proxy Query Parameters" index={Columns::ProxyQueryParameters} />
+      <TableColumn<Columns> label="Proxy Method" index={Columns::ProxyMethod} />
+      <TableColumn<Columns> label="Proxy Body" index={Columns::ProxyBody} />
     </TableHeader<Columns>>
   };
 
@@ -113,7 +115,9 @@ enum Columns {
   Name,
   BaseUrl,
   ProxyPath,
-  QueryPath,
+  ProxyQueryParameters,
+  ProxyMethod,
+  ProxyBody,
 }
 
 #[derive(Clone, Debug)]
@@ -148,7 +152,9 @@ impl TableEntryRenderer<Columns> for AssetRenderer {
       Columns::Name => html!(self.get_property("name")),
       Columns::BaseUrl => html!(self.get_data_address_property("baseUrl")),
       Columns::ProxyPath => html!(self.get_data_address_property("proxyPath") == "true"),
-      Columns::QueryPath => html!(self.get_data_address_property("proxyQueryParams") == "true"),
+      Columns::ProxyQueryParameters => html!(self.get_data_address_property("proxyQueryParams") == "true"),
+      Columns::ProxyMethod => html!(self.get_data_address_property("proxyMethod") == "true"),
+      Columns::ProxyBody => html!(self.get_data_address_property("proxyBody") == "true"),
     }
     .into()
   }
