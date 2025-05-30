@@ -67,14 +67,8 @@ pub fn CreateAsset() -> Html {
             "proxyQueryParams",
             if proxy_query_params { "true" } else { "false" },
           )
-          .property(
-            "proxyMethod",
-            if proxy_method { "true" } else { "false" },
-          )
-          .property(
-            "proxyBody",
-            if proxy_body { "true" } else { "false" },
-          );
+          .property("proxyMethod", if proxy_method { "true" } else { "false" })
+          .property("proxyBody", if proxy_body { "true" } else { "false" });
 
         for (key, value) in &headers {
           data_address_builder = data_address_builder.property(&format!("header:{key}"), value);

@@ -50,6 +50,7 @@ mod main_application {
   #[function_component]
   pub fn MainApplication() -> Html {
     let validated = use_state(|| false);
+
     let management_url = use_state(|| {
       if let Some(Ok(management_url)) = wasm_cookies::get("EDC_CONNECTOR_MANAGEMENT_URL") {
         management_url
@@ -57,6 +58,7 @@ mod main_application {
         "".to_string()
       }
     });
+
     let api_key = use_state(|| {
       if let Some(Ok(management_url)) = wasm_cookies::get("EDC_CONNECTOR_API_KEY") {
         management_url

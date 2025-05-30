@@ -152,7 +152,9 @@ impl TableEntryRenderer<Columns> for AssetRenderer {
       Columns::Name => html!(self.get_property("name")),
       Columns::BaseUrl => html!(self.get_data_address_property("baseUrl")),
       Columns::ProxyPath => html!(self.get_data_address_property("proxyPath") == "true"),
-      Columns::ProxyQueryParameters => html!(self.get_data_address_property("proxyQueryParams") == "true"),
+      Columns::ProxyQueryParameters => {
+        html!(self.get_data_address_property("proxyQueryParams") == "true")
+      }
       Columns::ProxyMethod => html!(self.get_data_address_property("proxyMethod") == "true"),
       Columns::ProxyBody => html!(self.get_data_address_property("proxyBody") == "true"),
     }
