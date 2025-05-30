@@ -11,6 +11,7 @@ pub struct Props {
   pub action: Action,
   pub constraints: Vec<Constraint>,
   pub onchange: Callback<(usize, Action, Vec<Constraint>)>,
+  pub ondelete: Callback<usize>,
 }
 
 #[function_component]
@@ -53,6 +54,29 @@ pub fn Rule(props: &Props) -> Html {
     },
   );
 
+  let delete_constraint = use_callback(
+    (
+      action.clone(),
+      constraints.clone(),
+      props.index,
+      props.onchange.clone(),
+    ),
+    move |contraint_index, (action, constraints, index, onchange)| {
+      let mut list = (**constraints).clone();
+      list.remove(contraint_index);
+      constraints.set(list.clone());
+
+      onchange.emit((*index, (**action).clone(), list));
+    },
+  );
+
+  let delete_rule = use_callback(
+    (props.index, props.ondelete.clone()),
+    |_, (index, ondelete)| {
+      ondelete.emit(*index);
+    },
+  );
+
   let update_constraint = use_callback(
     (
       action.clone(),
@@ -89,6 +113,7 @@ pub fn Rule(props: &Props) -> Html {
               operator={atomic_constraint.operator.clone()}
               right_operand={atomic_constraint.right_operand.0.clone()}
               onchange={update_constraint.clone()}
+              ondelete={delete_constraint.clone()}
               />
           )
         }
@@ -122,7 +147,20 @@ pub fn Rule(props: &Props) -> Html {
         </Button>
       </StackItem>
       <StackItem>
-        <SimpleOrIdField onchange={onchange_action} is_simple={action_is_simple} value={action_value} />
+        <SimpleOrIdField
+          onchange={onchange_action}
+          is_simple={action_is_simple}
+          value={action_value}
+          />
+      </StackItem>
+      <StackItem>
+        <Button
+          icon={Icon::Trash}
+          variant={ButtonVariant::DangerSecondary}
+          onclick={delete_rule}
+          >
+          {"Delete rule"}
+        </Button>
       </StackItem>
     </Stack>
   )

@@ -25,6 +25,12 @@ pub fn ListOfRules(props: &Props) -> Html {
     list.set(list_of_rules);
   });
 
+  let ondelete = use_callback(list.clone(), |index, list| {
+    let mut list_of_rules = (**list).clone();
+    list_of_rules.remove(index);
+    list.set(list_of_rules);
+  });
+
   log::info!("{list:?}");
 
   let list_of_rules = (*list)
@@ -41,7 +47,7 @@ pub fn ListOfRules(props: &Props) -> Html {
               {format!("Rule {}", index + 1)}
             </CardTitle>
             <CardBody>
-              <Rule key={index} {index} {action} {constraints} onchange={onchange.clone()}></Rule>
+              <Rule key={index} {index} {action} {constraints} onchange={onchange.clone()} ondelete={ondelete.clone()}></Rule>
             </CardBody>
           </Card>
         </StackItem>

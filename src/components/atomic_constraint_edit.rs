@@ -11,6 +11,7 @@ pub struct Props {
   pub operator: Operator,
   pub right_operand: Value,
   pub onchange: Callback<(usize, LeftOperand, Operator, Value)>,
+  pub ondelete: Callback<usize>,
 }
 
 #[function_component]
@@ -113,6 +114,13 @@ pub fn AtomicConstraintEdit(props: &Props) -> Html {
     )
   };
 
+  let delete_constraint = use_callback(
+    (props.index, props.ondelete.clone()),
+    |_, (index, ondelete)| {
+      ondelete.emit(*index);
+    },
+  );
+
   let input_state = if *is_right_operand_valid {
     InputState::Success
   } else {
@@ -142,6 +150,13 @@ pub fn AtomicConstraintEdit(props: &Props) -> Html {
           value={(*right_operand_string).clone()}
           onchange={onchange_right_operand}
           state={input_state}
+          />
+      </FlexItem>
+      <FlexItem>
+        <Button
+          icon={Icon::Trash}
+          variant={ButtonVariant::DangerSecondary}
+          onclick={delete_constraint}
           />
       </FlexItem>
     </Flex>
