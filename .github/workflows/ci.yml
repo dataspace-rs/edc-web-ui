@@ -88,3 +88,30 @@ jobs:
           command: doc
           args: --no-deps --document-private-items --all-features --workspace --examples
 
+
+  docker-image:
+    name: "Build and push images"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set metadata of docker image
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/dataspace-rs/edc-web-ui
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
