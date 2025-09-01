@@ -4,6 +4,7 @@ mod create_contract_definition;
 mod create_contract_negotiation;
 mod create_policy;
 mod create_transfer_process;
+mod criterion_edit;
 mod list_assets;
 mod list_contract_agreements;
 mod list_contract_definitions;

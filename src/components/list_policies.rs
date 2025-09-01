@@ -3,6 +3,7 @@ use edc_connector_client::types::policy::{PolicyDefinition, PolicyKind};
 use edc_connector_client::types::query::Query;
 use patternfly_yew::prelude::*;
 use std::rc::Rc;
+use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
 
@@ -50,6 +51,7 @@ pub fn ListPoliciesInner() -> HtmlResult {
       <TableColumn<Columns> label="Kind" index={Columns::Kind} />
       <TableColumn<Columns> label="Assignee" index={Columns::Assignee} />
       <TableColumn<Columns> label="Assigner" index={Columns::Assigner} />
+      <TableColumn<Columns> label="" index={Columns::Actions} />
     </TableHeader<Columns>>
   };
 
@@ -112,6 +114,7 @@ enum Columns {
   Kind,
   Assignee,
   Assigner,
+  Actions,
 }
 
 #[derive(Clone, Debug)]
@@ -148,7 +151,48 @@ impl TableEntryRenderer<Columns> for PolicyRenderer {
           .unwrap_or_default()
           .to_string()
       ),
+      Columns::Actions => {
+        let policy_id = self.0.id().to_string();
+
+        html!(
+          <DeletePolicy {policy_id} />
+        )
+      }
     }
     .into()
   }
+}
+
+#[derive(Clone, PartialEq, Properties)]
+pub struct Props {
+  pub policy_id: String,
+}
+
+#[function_component]
+pub fn DeletePolicy(props: &Props) -> Html {
+  let edc_connector_context = use_edc_connector_context();
+
+  let onclick = use_callback(
+    (edc_connector_context, props.policy_id.clone()),
+    move |_, (edc_connector_context, policy_id)| {
+      let edc_connector_context = edc_connector_context.clone();
+      let policy_id = policy_id.to_string();
+
+      spawn_local(async move {
+        if let Some(client) = edc_connector_context.get_client() {
+          let _ = client.policies().delete(&policy_id).await;
+        }
+      });
+    },
+  );
+
+  html!(
+    <Button
+      variant={ButtonVariant::Danger}
+      icon={Icon::Trash}
+      {onclick}
+      >
+      {"Delete"}
+    </Button>
+  )
 }

@@ -3,6 +3,7 @@ use edc_connector_client::types::asset::Asset;
 use edc_connector_client::types::query::Query;
 use patternfly_yew::prelude::*;
 use std::rc::Rc;
+use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
 
@@ -32,6 +33,7 @@ pub fn ListAssetsInner() -> HtmlResult {
       let query = Query::builder()
         .limit(*limit as u32)
         .offset(*offset as u32)
+        // .filter("https://w3id.org/edc/v0.0.1/ns/master-catalog-company-id", "=", "424F9F7A-BBC8-4BAD-B128-C3D0A693ABBA")
         .build();
 
       if let Some(client) = edc_connector_context.get_client() {
@@ -53,6 +55,7 @@ pub fn ListAssetsInner() -> HtmlResult {
       <TableColumn<Columns> label="Proxy Query Parameters" index={Columns::ProxyQueryParameters} />
       <TableColumn<Columns> label="Proxy Method" index={Columns::ProxyMethod} />
       <TableColumn<Columns> label="Proxy Body" index={Columns::ProxyBody} />
+      <TableColumn<Columns> label="" index={Columns::Actions} />
     </TableHeader<Columns>>
   };
 
@@ -118,6 +121,7 @@ enum Columns {
   ProxyQueryParameters,
   ProxyMethod,
   ProxyBody,
+  Actions,
 }
 
 #[derive(Clone, Debug)]
@@ -157,7 +161,48 @@ impl TableEntryRenderer<Columns> for AssetRenderer {
       }
       Columns::ProxyMethod => html!(self.get_data_address_property("proxyMethod") == "true"),
       Columns::ProxyBody => html!(self.get_data_address_property("proxyBody") == "true"),
+      Columns::Actions => {
+        let asset_id = self.0.id().to_string();
+
+        html!(
+          <DeleteAsset {asset_id} />
+        )
+      }
     }
     .into()
   }
+}
+
+#[derive(Clone, PartialEq, Properties)]
+pub struct Props {
+  pub asset_id: String,
+}
+
+#[function_component]
+pub fn DeleteAsset(props: &Props) -> Html {
+  let edc_connector_context = use_edc_connector_context();
+
+  let onclick = use_callback(
+    (edc_connector_context, props.asset_id.clone()),
+    move |_, (edc_connector_context, asset_id)| {
+      let edc_connector_context = edc_connector_context.clone();
+      let asset_id = asset_id.to_string();
+
+      spawn_local(async move {
+        if let Some(client) = edc_connector_context.get_client() {
+          let _ = client.assets().delete(&asset_id).await;
+        }
+      });
+    },
+  );
+
+  html!(
+    <Button
+      variant={ButtonVariant::Danger}
+      icon={Icon::Trash}
+      {onclick}
+      >
+      {"Delete"}
+    </Button>
+  )
 }

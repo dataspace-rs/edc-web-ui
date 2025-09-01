@@ -3,6 +3,7 @@ use edc_connector_client::types::contract_definition::ContractDefinition;
 use edc_connector_client::types::query::Query;
 use patternfly_yew::prelude::*;
 use std::rc::Rc;
+use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
 
@@ -49,6 +50,7 @@ pub fn ListContractDefinitionsInner() -> HtmlResult {
       <TableColumn<Columns> label="ID" index={Columns::Id} />
       <TableColumn<Columns> label="Access Policy ID" index={Columns::AccessPolicyId} />
       <TableColumn<Columns> label="Contract Policy ID" index={Columns::ContractPolicyId} />
+      <TableColumn<Columns> label="" index={Columns::Actions} />
     </TableHeader<Columns>>
   };
 
@@ -110,6 +112,7 @@ enum Columns {
   Id,
   AccessPolicyId,
   ContractPolicyId,
+  Actions,
 }
 
 #[derive(Clone, Debug)]
@@ -123,7 +126,51 @@ impl TableEntryRenderer<Columns> for ContractDefinitionRenderer {
       Columns::Id => html! {self.0.id().to_string()},
       Columns::AccessPolicyId => html!(self.0.access_policy_id()),
       Columns::ContractPolicyId => html!(self.0.contract_policy_id()),
+      Columns::Actions => {
+        let contract_definition_id = self.0.id().to_string();
+
+        html!(
+          <DeleteContractDefinition {contract_definition_id} />
+        )
+      }
     }
     .into()
   }
+}
+
+#[derive(Clone, PartialEq, Properties)]
+pub struct Props {
+  pub contract_definition_id: String,
+}
+
+#[function_component]
+pub fn DeleteContractDefinition(props: &Props) -> Html {
+  let edc_connector_context = use_edc_connector_context();
+
+  let onclick = use_callback(
+    (edc_connector_context, props.contract_definition_id.clone()),
+    move |_, (edc_connector_context, contract_definition_id)| {
+      let edc_connector_context = edc_connector_context.clone();
+      let contract_definition_id = contract_definition_id.to_string();
+
+      spawn_local(async move {
+        if let Some(client) = edc_connector_context.get_client() {
+          let _ = client
+            .contract_definitions()
+            .delete(&contract_definition_id)
+            .await;
+        }
+      });
+    },
+  );
+
+  html!(
+    <Button
+      variant={ButtonVariant::Danger}
+      icon={Icon::Trash}
+      {onclick}
+      >
+      {"Delete"}
+    </Button>
+  )
 }

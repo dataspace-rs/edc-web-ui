@@ -1,5 +1,7 @@
+use crate::components::criterion_edit::CriterionEdit;
 use crate::contexts::use_edc_connector_context;
 use edc_connector_client::types::contract_definition::NewContractDefinition;
+use edc_connector_client::types::query::Criterion;
 use patternfly_yew::prelude::*;
 use yew::platform::spawn_local;
 use yew::prelude::*;
@@ -11,39 +13,58 @@ pub fn CreateContractDefinition() -> Html {
   let identifier = use_state(|| "".to_string());
   let access_policy_id = use_state(|| "".to_string());
   let contract_policy_id = use_state(|| "".to_string());
+  let asset_selector = use_state(|| (String::new(), String::new(), String::new()));
 
-  let onsubmit = use_callback(
-    (
-      edc_connector_context.clone(),
-      identifier.clone(),
-      access_policy_id.clone(),
-      contract_policy_id.clone(),
-    ),
-    |event: SubmitEvent,
-     (edc_connector_context, identifier, access_policy_id, contract_policy_id)| {
-      event.prevent_default();
+  let onsubmit =
+    use_callback(
+      (
+        edc_connector_context.clone(),
+        identifier.clone(),
+        access_policy_id.clone(),
+        contract_policy_id.clone(),
+        asset_selector.clone(),
+      ),
+      |event: SubmitEvent,
+       (
+        edc_connector_context,
+        identifier,
+        access_policy_id,
+        contract_policy_id,
+        asset_selector,
+      )| {
+        event.prevent_default();
 
-      let edc_connector_context = edc_connector_context.clone();
-      let identifier = (**identifier).clone();
-      let access_policy_id = (**access_policy_id).clone();
-      let contract_policy_id = (**contract_policy_id).clone();
+        let edc_connector_context = edc_connector_context.clone();
+        let identifier = (**identifier).clone();
+        let access_policy_id = (**access_policy_id).clone();
+        let contract_policy_id = (**contract_policy_id).clone();
+        let asset_selector = (**asset_selector).clone();
 
-      spawn_local(async move {
-        let new_contract_definition = NewContractDefinition::builder()
-          .id(&identifier)
-          .access_policy_id(access_policy_id)
-          .contract_policy_id(contract_policy_id)
-          .build();
+        spawn_local(async move {
+          let new_contract_definition = NewContractDefinition::builder()
+            .id(&identifier)
+            .access_policy_id(access_policy_id)
+            .contract_policy_id(contract_policy_id);
 
-        if let Some(client) = edc_connector_context.get_client() {
-          let _ = client
-            .contract_definitions()
-            .create(&new_contract_definition)
-            .await;
-        }
-      })
-    },
-  );
+          let (left, operator, right) = asset_selector;
+          let new_contract_definition =
+            if !left.is_empty() && !operator.is_empty() && !right.is_empty() {
+              new_contract_definition.asset_selector(Criterion::new(&left, &operator, &right))
+            } else {
+              new_contract_definition
+            };
+
+          let new_contract_definition = new_contract_definition.build();
+
+          if let Some(client) = edc_connector_context.get_client() {
+            let _ = client
+              .contract_definitions()
+              .create(&new_contract_definition)
+              .await;
+          }
+        })
+      },
+    );
 
   let onchange_identifier = {
     let identifier = identifier.clone();
@@ -70,6 +91,16 @@ pub fn CreateContractDefinition() -> Html {
   };
 
   let disabled = false;
+
+  let (operand_left, operator, operand_right) = (*asset_selector).clone();
+
+  let onchange_asset_selection = {
+    let asset_selector = asset_selector.clone();
+
+    use_callback((), move |value, _| {
+      asset_selector.set(value);
+    })
+  };
 
   html!(
     <Form {onsubmit}>
@@ -104,6 +135,16 @@ pub fn CreateContractDefinition() -> Html {
           value={(*contract_policy_id).to_string()}
           onchange={onchange_contract_policy_id}
           />
+      </FormGroup>
+
+      <FormGroup
+        label={"Asset Selector"}
+        >
+        <CriterionEdit
+          {operand_left}
+          {operator}
+          {operand_right}
+          onchange={onchange_asset_selection} />
       </FormGroup>
 
       <ActionGroup>
