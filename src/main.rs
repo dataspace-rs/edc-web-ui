@@ -27,7 +27,9 @@ mod main_application {
   };
   use edc_web_ui::contexts::EdcConnectorContextProvider;
   use patternfly_yew::prelude::*;
+  use serde::Deserialize;
   use wasm_cookies::CookieOptions;
+  use yew::platform::spawn_local;
   use yew::prelude::*;
   use yew_router::{BrowserRouter, Routable};
 
@@ -47,6 +49,12 @@ mod main_application {
     TransferProcesses,
   }
 
+  #[derive(Clone, Debug, Deserialize, PartialEq)]
+  struct Configuration {
+    management_url: String,
+    api_key: Option<String>,
+  }
+
   #[function_component]
   pub fn MainApplication() -> Html {
     let validated = use_state(|| false);
@@ -60,12 +68,41 @@ mod main_application {
     });
 
     let api_key = use_state(|| {
-      if let Some(Ok(management_url)) = wasm_cookies::get("EDC_CONNECTOR_API_KEY") {
-        management_url
+      if let Some(Ok(api_key)) = wasm_cookies::get("EDC_CONNECTOR_API_KEY") {
+        api_key
       } else {
         "".to_string()
       }
     });
+
+    {
+      let management_url = management_url.clone();
+      let api_key = api_key.clone();
+      let validated = validated.clone();
+
+      use_effect(move || {
+        let management_url = management_url.clone();
+        let api_key = api_key.clone();
+        let validated = validated.clone();
+
+        spawn_local(async move {
+          let server_url = web_sys::window().unwrap().location().origin().unwrap();
+
+          if let Ok(response) = reqwest::get(format!("{server_url}/configuration.json")).await {
+            if let Ok(configuration) = response.json::<Configuration>().await {
+              log::warn!("Configuration: {:?}", configuration);
+
+              management_url.set(format!("{server_url}{}", configuration.management_url));
+              if let Some(configuration_api_key) = configuration.api_key {
+                api_key.set(configuration_api_key);
+              }
+
+              validated.set(true);
+            }
+          }
+        })
+      });
+    }
 
     let onchange_management_url =
       use_callback(management_url.clone(), |value: String, management_url| {
