@@ -23,7 +23,7 @@ mod main_application {
   use edc_web_ui::components::{
     CreateAsset, CreateContractDefinition, CreateContractNegotiation, CreatePolicy,
     CreateTransferProcess, ListAssets, ListContractAgreements, ListContractDefinitions,
-    ListContractNegotiations, ListPolicies, ListTransferProcesses,
+    ListContractNegotiations, ListOffers, ListPolicies, ListTransferProcesses,
   };
   use edc_web_ui::contexts::EdcConnectorContextProvider;
   use patternfly_yew::prelude::*;
@@ -47,6 +47,8 @@ mod main_application {
     ContractAgreements,
     #[at("/transfer-processes")]
     TransferProcesses,
+    #[at("/offers")]
+    Offers,
   }
 
   #[derive(Clone, Debug, Deserialize, PartialEq)]
@@ -252,6 +254,12 @@ mod main_application {
       }
     });
 
+    let go_to_offers = use_callback(navigator.clone(), |_, navigator| {
+      if let Some(navigator) = navigator {
+        navigator.push(&AppRoute::Offers);
+      }
+    });
+
     let sidebar = html_nested!(
       <PageSidebar>
         <Nav>
@@ -273,6 +281,9 @@ mod main_application {
             </NavItem>
             <NavItem onclick={go_to_transfer_processes}>
               {"Transfer Processes"}
+            </NavItem>
+            <NavItem onclick={go_to_offers}>
+              {"Offers"}
             </NavItem>
           </NavList>
         </Nav>
@@ -433,6 +444,18 @@ mod main_application {
             </Card>
           </StackItem>
         </Stack>
+      },
+      Some(AppRoute::Offers) => html! {
+        <Card>
+          <CardHeader>
+            <Title level={Level::H3} size={Size::XXLarge}>
+              {"List offers on another participant"}
+            </Title>
+          </CardHeader>
+          <CardBody>
+            <ListOffers />
+          </CardBody>
+        </Card>
       },
     };
 

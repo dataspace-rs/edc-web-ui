@@ -129,8 +129,6 @@ enum Columns {
 #[derive(Clone, Debug)]
 struct ContractNegotiationRenderer(ContractNegotiation);
 
-impl ContractNegotiationRenderer {}
-
 impl TableEntryRenderer<Columns> for ContractNegotiationRenderer {
   fn render_cell(&self, context: CellContext<'_, Columns>) -> Cell {
     let contract_agreement_id = self
@@ -169,7 +167,7 @@ impl TableEntryRenderer<Columns> for ContractNegotiationRenderer {
       Columns::ContractPolicyId => html! {},
       Columns::State => html! { state },
       Columns::ContractAgreementId => html! { contract_agreement_id },
-      Columns::CounterPartyId => html! { self.0.counter_party_id() },
+      Columns::CounterPartyId => html! { self.0.counter_party_id().clone().unwrap_or_default() },
       Columns::CounterPartyAddress => html! { self.0.counter_party_address() },
       Columns::Protocol => html! { self.0.protocol() },
       Columns::Kind => html! { kind },
