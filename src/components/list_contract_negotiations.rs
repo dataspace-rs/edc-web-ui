@@ -129,8 +129,6 @@ enum Columns {
 #[derive(Clone, Debug)]
 struct ContractNegotiationRenderer(ContractNegotiation);
 
-impl ContractNegotiationRenderer {}
-
 impl TableEntryRenderer<Columns> for ContractNegotiationRenderer {
   fn render_cell(&self, context: CellContext<'_, Columns>) -> Cell {
     let contract_agreement_id = self

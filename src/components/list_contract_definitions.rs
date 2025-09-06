@@ -118,8 +118,6 @@ enum Columns {
 #[derive(Clone, Debug)]
 struct ContractDefinitionRenderer(ContractDefinition);
 
-impl ContractDefinitionRenderer {}
-
 impl TableEntryRenderer<Columns> for ContractDefinitionRenderer {
   fn render_cell(&self, context: CellContext<'_, Columns>) -> Cell {
     match context.column {
