@@ -52,8 +52,6 @@ mod main_application {
 
   #[component]
   pub fn MainApplication() -> Html {
-    let validated = use_state(|| false);
-
     let management_url = use_state(|| {
       if let Some(Ok(management_url)) = wasm_cookies::get("EDC_CONNECTOR_MANAGEMENT_URL") {
         management_url
@@ -69,6 +67,8 @@ mod main_application {
         "".to_string()
       }
     });
+
+    let validated = use_state(|| !(*management_url).is_empty() && !(*api_key).is_empty());
 
     {
       let management_url = management_url.clone();
@@ -101,28 +101,36 @@ mod main_application {
 
     let onchange_management_url =
       use_callback(management_url.clone(), |value: String, management_url| {
-        wasm_cookies::set(
-          "EDC_CONNECTOR_MANAGEMENT_URL",
-          &value,
-          &CookieOptions::default().with_path("/"),
-        );
-
         management_url.set(value);
       });
 
     let onchange_api_key = use_callback(api_key.clone(), |value: String, api_key| {
-      wasm_cookies::set(
-        "EDC_CONNECTOR_API_KEY",
-        &value,
-        &CookieOptions::default().with_path("/"),
-      );
-
       api_key.set(value);
     });
 
-    let onsubmit = use_callback(validated.clone(), |event: SubmitEvent, validated| {
-      event.prevent_default();
-      validated.set(true);
+    let onsubmit = use_callback(
+      (management_url.clone(), api_key.clone(), validated.clone()),
+      |event: SubmitEvent, (management_url, api_key, validated)| {
+        event.prevent_default();
+
+        wasm_cookies::set(
+          "EDC_CONNECTOR_MANAGEMENT_URL",
+          &**management_url,
+          &CookieOptions::default().with_path("/"),
+        );
+
+        wasm_cookies::set(
+          "EDC_CONNECTOR_API_KEY",
+          &**api_key,
+          &CookieOptions::default().with_path("/"),
+        );
+
+        validated.set(true);
+      },
+    );
+
+    let onlogout = use_callback(validated.setter(), |_, validated_setter| {
+      validated_setter.set(false);
     });
 
     if *validated {
@@ -139,7 +147,7 @@ mod main_application {
         <BrowserRouter>
           <EdcConnectorContextProvider {management_url} {api_key}>
             <BackdropViewer>
-              <MainView />
+              <MainView {onlogout} />
             </BackdropViewer>
           </EdcConnectorContextProvider>
         </BrowserRouter>
@@ -198,11 +206,16 @@ mod main_application {
     }
   }
 
+  #[derive(Properties, PartialEq, Clone)]
+  pub struct MainViewProps {
+    pub onlogout: Callback<()>,
+  }
+
   #[component]
-  pub fn MainView() -> Html {
+  pub fn MainView(props: &MainViewProps) -> Html {
     let brand = html!(
       <>
-        <img src="/logo.png" style="height: 25px !important; margin-right: 10px" />
+        <img src="./logo.png" style="height: 25px !important; margin-right: 10px" />
         <Title level={Level::H3} size={Size::XXLarge}>{ "EDC Web UI" }</Title>
       </>
     );
@@ -249,6 +262,17 @@ mod main_application {
       Some(AppRoute::TransferProcesses) => html! { <TransferProcessPage /> },
     };
 
+    let onlogout = use_callback(props.onlogout.clone(), |_, onlogout| {
+      wasm_cookies::set(
+        "EDC_CONNECTOR_API_KEY",
+        "",
+        &CookieOptions::default()
+          .with_path("/")
+          .expires_at_timestamp(0),
+      );
+      onlogout.emit(());
+    });
+
     let tools = html!(
       <Toolbar>
         <ToolbarContent>
@@ -258,6 +282,9 @@ mod main_application {
           >
             <ToolbarItem>
               <ToggleTheme />
+            </ToolbarItem>
+            <ToolbarItem>
+              <Button variant={ButtonVariant::Primary} onclick={onlogout}>{ "Logout" }</Button>
             </ToolbarItem>
           </ToolbarGroup>
         </ToolbarContent>
