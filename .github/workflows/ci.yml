@@ -112,7 +112,7 @@ jobs:
         run: cargo install --git https://github.com/luminvent/trunk.git --rev 9d37e0a521cb6562f8b8db9be64c08aaa812617b trunk
 
       - name: Build page
-        run: trunk build
+        run: trunk build --public-url /edc-web-ui/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
