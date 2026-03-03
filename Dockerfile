@@ -1,17 +1,13 @@
 FROM rust:1.93.0-bookworm AS build-stage
 
 RUN rustup target add wasm32-unknown-unknown && \
-    cargo install trunk && \
-    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
-    apt-get update && \
-    apt-get install -y nodejs
+    cargo install --git https://github.com/luminvent/trunk.git --rev 9d37e0a521cb6562f8b8db9be64c08aaa812617b trunk
 
 ADD . /sources
 
 WORKDIR /sources
 
-RUN npm install && \
-    trunk build --release
+RUN trunk build --release
 
 FROM nginx:1.28.0-bookworm
 
