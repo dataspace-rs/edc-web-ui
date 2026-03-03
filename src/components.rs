@@ -12,6 +12,7 @@ mod list_contract_negotiations;
 mod list_of_rules;
 mod list_policies;
 mod list_transfer_processes;
+mod policy_selector;
 mod rule;
 mod simple_or_id_field;
 
@@ -26,3 +27,4 @@ pub use list_contract_definitions::ListContractDefinitions;
 pub use list_contract_negotiations::ListContractNegotiations;
 pub use list_policies::ListPolicies;
 pub use list_transfer_processes::ListTransferProcesses;
+pub use policy_selector::*;

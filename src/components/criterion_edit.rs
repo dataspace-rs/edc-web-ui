@@ -9,7 +9,7 @@ pub struct Props {
   pub onchange: Callback<(String, String, String)>,
 }
 
-#[function_component]
+#[component]
 pub fn CriterionEdit(props: &Props) -> Html {
   let left_operand = use_state(|| props.operand_left.clone());
   let operator = use_state(|| props.operator.clone());
@@ -69,22 +69,13 @@ pub fn CriterionEdit(props: &Props) -> Html {
   html!(
     <Flex>
       <FlexItem modifiers={[FlexModifier::Flex1]}>
-        <TextInput
-            value={(*left_operand).clone()}
-            onchange={onchange_left_operand}
-            />
+        <TextInput value={(*left_operand).clone()} onchange={onchange_left_operand} />
       </FlexItem>
       <FlexItem modifiers={[FlexModifier::Flex1]}>
-        <TextInput
-            value={(*operator).clone()}
-            onchange={onchange_operator}
-            />
+        <TextInput value={(*operator).clone()} onchange={onchange_operator} />
       </FlexItem>
       <FlexItem modifiers={[FlexModifier::Flex1]}>
-        <TextInput
-            value={(*operator).clone()}
-            onchange={onchange_right_operand}
-            />
+        <TextInput value={(*operator).clone()} onchange={onchange_right_operand} />
       </FlexItem>
     </Flex>
   )

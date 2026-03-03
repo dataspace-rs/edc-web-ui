@@ -1,6 +1,6 @@
 services:
   connector:
-    image: ${CONNECTOR_IMAGE:-ghcr.io/dataspace-rs/connector:0.11.1}
+    image: ${CONNECTOR_IMAGE:-ghcr.io/dataspace-rs/connector:0.15.0}
     ports:
       - "19191:9191" # connector default
       - "19192:9192" # connector control

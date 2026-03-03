@@ -43,7 +43,7 @@ pub struct Props {
   pub api_key: Option<String>,
 }
 
-#[function_component]
+#[component]
 pub fn EdcConnectorContextProvider(props: &Props) -> Html {
   let edc_connector_context = use_reducer(move || EdcConnectorState {
     management_url: props.management_url.clone(),

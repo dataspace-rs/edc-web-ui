@@ -9,7 +9,7 @@ pub struct Props {
   pub onchange: Callback<Vec<(Action, Vec<Constraint>)>>,
 }
 
-#[function_component]
+#[component]
 pub fn ListOfRules(props: &Props) -> Html {
   let list = use_state(|| props.list.clone());
 
@@ -43,11 +43,16 @@ pub fn ListOfRules(props: &Props) -> Html {
       html_nested!(
         <StackItem>
           <Card>
-            <CardTitle>
-              {format!("Rule {}", index + 1)}
-            </CardTitle>
+            <CardTitle>{ format!("Rule {}", index + 1) }</CardTitle>
             <CardBody>
-              <Rule key={index} {index} {action} {constraints} onchange={onchange.clone()} ondelete={ondelete.clone()}></Rule>
+              <Rule
+                key={index}
+                {index}
+                {action}
+                {constraints}
+                onchange={onchange.clone()}
+                ondelete={ondelete.clone()}
+              />
             </CardBody>
           </Card>
         </StackItem>
@@ -56,15 +61,10 @@ pub fn ListOfRules(props: &Props) -> Html {
 
   html!(
     <Stack gutter=true>
-      {for list_of_rules}
-
+      { for list_of_rules }
       <StackItem>
-        <Button
-          icon={Icon::Plus}
-          variant={ButtonVariant::Primary}
-          onclick={add_rule}
-          >
-          {"Add rule"}
+        <Button icon={Icon::Plus} variant={ButtonVariant::Primary} onclick={add_rule}>
+          { "Add rule" }
         </Button>
       </StackItem>
     </Stack>

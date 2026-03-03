@@ -14,7 +14,7 @@ pub struct Props {
   pub ondelete: Callback<usize>,
 }
 
-#[function_component]
+#[component]
 pub fn AtomicConstraintEdit(props: &Props) -> Html {
   let left_operand = use_state(|| props.left_operand.clone());
   let operator = use_state(|| props.operator.clone());
@@ -140,24 +140,32 @@ pub fn AtomicConstraintEdit(props: &Props) -> Html {
   html!(
     <Flex>
       <FlexItem modifiers={[FlexModifier::Flex1]}>
-        <SimpleOrIdField onchange={onchange_left_operand} is_simple={left_operand_is_simple} value={left_operand_value} />
+        <SimpleOrIdField
+          onchange={onchange_left_operand}
+          is_simple={left_operand_is_simple}
+          value={left_operand_value}
+        />
       </FlexItem>
       <FlexItem modifiers={[FlexModifier::Flex1]}>
-        <SimpleOrIdField onchange={onchange_operator} is_simple={operator_is_simple} value={operator_value} />
+        <SimpleOrIdField
+          onchange={onchange_operator}
+          is_simple={operator_is_simple}
+          value={operator_value}
+        />
       </FlexItem>
       <FlexItem modifiers={[FlexModifier::Flex1]}>
         <TextInput
           value={(*right_operand_string).clone()}
           onchange={onchange_right_operand}
           state={input_state}
-          />
+        />
       </FlexItem>
       <FlexItem>
         <Button
           icon={Icon::Trash}
           variant={ButtonVariant::DangerSecondary}
           onclick={delete_constraint}
-          />
+        />
       </FlexItem>
     </Flex>
   )

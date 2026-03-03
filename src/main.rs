@@ -20,12 +20,7 @@ fn main() {
 
 #[cfg(target_arch = "wasm32")]
 mod main_application {
-  use edc_web_ui::components::{
-    CreateAsset, CreateContractDefinition, CreateContractNegotiation, CreatePolicy,
-    CreateTransferProcess, ListAssets, ListContractAgreements, ListContractDefinitions,
-    ListContractNegotiations, ListPolicies, ListTransferProcesses,
-  };
-  use edc_web_ui::contexts::EdcConnectorContextProvider;
+  use edc_web_ui::{contexts::EdcConnectorContextProvider, pages::*};
   use patternfly_yew::prelude::*;
   use serde::Deserialize;
   use wasm_cookies::CookieOptions;
@@ -55,7 +50,7 @@ mod main_application {
     api_key: Option<String>,
   }
 
-  #[function_component]
+  #[component]
   pub fn MainApplication() -> Html {
     let validated = use_state(|| false);
 
@@ -143,7 +138,9 @@ mod main_application {
       html!(
         <BrowserRouter>
           <EdcConnectorContextProvider {management_url} {api_key}>
-            <MainView />
+            <BackdropViewer>
+              <MainView />
+            </BackdropViewer>
           </EdcConnectorContextProvider>
         </BrowserRouter>
       )
@@ -152,50 +149,48 @@ mod main_application {
         <>
           <Background
             style="logo.png"
-            additional_style="background-size: 200px 200px; background-position: calc(100vw - 220px) calc(100vh - 220px);"
-            />
+            additional_style="background-size: 200px 200px; background-position: calc(100vw - 220px) calc(100vh - 220px); background-color: var(--pf-t--global--background--color--secondary--default);"
+          />
           <Login>
             <Card>
               <CardHeader>
-                <Title level={Level::H3} size={Size::XXLarge}>
-                  {"EDC Connector Management"}
-                </Title>
+                <Title level={Level::H3} size={Size::XXLarge}>{ "EDC Connector Management" }</Title>
               </CardHeader>
               <CardBody>
                 <Form {onsubmit}>
-                  <FormGroup
-                    label={"Management URL"}
-                    required={true}
-                    >
+                  <FormGroup label="Management URL" required=true>
                     <TextInput
-                      required={true}
+                      required=true
                       value={(*management_url).to_string()}
                       onchange={onchange_management_url}
-                      />
+                    />
                   </FormGroup>
-                  <FormGroup
-                    label={"API Key"}
-                    >
+                  <FormGroup label="API Key">
                     <TextInput
                       value={(*api_key).to_string()}
                       onchange={onchange_api_key}
                       r#type={TextInputType::Password}
-                      />
+                    />
                   </FormGroup>
                   <ActionGroup>
                     <Button
                       variant={ButtonVariant::Primary}
                       label="Submit"
                       r#type={ButtonType::Submit}
-                      />
+                    />
                     <Button
                       variant={ButtonVariant::Secondary}
                       label="Reset"
                       r#type={ButtonType::Reset}
-                      />
+                    />
                   </ActionGroup>
                 </Form>
               </CardBody>
+              <CardFooter>
+                <Bullseye>
+                  <ToggleTheme />
+                </Bullseye>
+              </CardFooter>
             </Card>
           </Login>
         </>
@@ -203,52 +198,20 @@ mod main_application {
     }
   }
 
-  #[function_component]
+  #[component]
   pub fn MainView() -> Html {
     let brand = html!(
       <>
-        <img src="/logo.png" style="height: 25px !important; margin-right: 10px;" />
-        <Title level={Level::H3} size={Size::XXLarge}>
-          {"EDC Web UI"}
-        </Title>
+        <img src="/logo.png" style="height: 25px !important; margin-right: 10px" />
+        <Title level={Level::H3} size={Size::XXLarge}>{ "EDC Web UI" }</Title>
       </>
     );
 
     let navigator = yew_router::hooks::use_navigator();
 
-    let go_to_assets = use_callback(navigator.clone(), |_, navigator| {
+    let go_to = use_callback(navigator.clone(), |app_route, navigator| {
       if let Some(navigator) = navigator {
-        navigator.push(&AppRoute::Assets);
-      }
-    });
-
-    let go_to_policies = use_callback(navigator.clone(), |_, navigator| {
-      if let Some(navigator) = navigator {
-        navigator.push(&AppRoute::Policies);
-      }
-    });
-
-    let go_to_contract_definitions = use_callback(navigator.clone(), |_, navigator| {
-      if let Some(navigator) = navigator {
-        navigator.push(&AppRoute::ContractDefinitions);
-      }
-    });
-
-    let go_to_contract_negotiations = use_callback(navigator.clone(), |_, navigator| {
-      if let Some(navigator) = navigator {
-        navigator.push(&AppRoute::ContractNegotiations);
-      }
-    });
-
-    let go_to_contract_agreements = use_callback(navigator.clone(), |_, navigator| {
-      if let Some(navigator) = navigator {
-        navigator.push(&AppRoute::ContractAgreements);
-      }
-    });
-
-    let go_to_transfer_processes = use_callback(navigator.clone(), |_, navigator| {
-      if let Some(navigator) = navigator {
-        navigator.push(&AppRoute::TransferProcesses);
+        navigator.push(&app_route);
       }
     });
 
@@ -256,23 +219,19 @@ mod main_application {
       <PageSidebar>
         <Nav>
           <NavList>
-            <NavItem onclick={go_to_assets}>
-              {"Assets"}
+            <NavItem onclick={go_to.reform(|_| AppRoute::Assets)}>{ "Assets" }</NavItem>
+            <NavItem onclick={go_to.reform(|_| AppRoute::Policies)}>{ "Policies" }</NavItem>
+            <NavItem onclick={go_to.reform(|_| AppRoute::ContractDefinitions)}>
+              { "Contract Definitions" }
             </NavItem>
-            <NavItem onclick={go_to_policies}>
-              {"Policies"}
+            <NavItem onclick={go_to.reform(|_| AppRoute::ContractNegotiations)}>
+              { "Contract Negotiations" }
             </NavItem>
-            <NavItem onclick={go_to_contract_definitions}>
-              {"Contract Definitions"}
+            <NavItem onclick={go_to.reform(|_| AppRoute::ContractAgreements)}>
+              { "Contract Agreements" }
             </NavItem>
-            <NavItem onclick={go_to_contract_negotiations}>
-              {"Contract Negotiations"}
-            </NavItem>
-            <NavItem onclick={go_to_contract_agreements}>
-              {"Contract Agreements"}
-            </NavItem>
-            <NavItem onclick={go_to_transfer_processes}>
-              {"Transfer Processes"}
+            <NavItem onclick={go_to.reform(|_| AppRoute::TransferProcesses)}>
+              { "Transfer Processes" }
             </NavItem>
           </NavList>
         </Nav>
@@ -282,166 +241,98 @@ mod main_application {
     let route = yew_router::hooks::use_route();
 
     let page = match route {
-      None | Some(AppRoute::Assets) => html! {
-        <Stack gutter=true>
-          <StackItem>
-            <Card>
-              <CardHeader>
-                <Title level={Level::H3} size={Size::XXLarge}>
-                  {"Create an Asset"}
-                </Title>
-              </CardHeader>
-              <CardBody>
-                <CreateAsset />
-              </CardBody>
-            </Card>
-          </StackItem>
-          <StackItem>
-            <Card>
-              <CardHeader>
-                <Title level={Level::H3} size={Size::XXLarge}>
-                  {"List Assets"}
-                </Title>
-              </CardHeader>
-              <CardBody>
-                <ListAssets />
-              </CardBody>
-            </Card>
-          </StackItem>
-        </Stack>
-      },
-      Some(AppRoute::Policies) => html! {
-        <Stack gutter=true>
-          <StackItem>
-            <Card>
-              <CardHeader>
-                <Title level={Level::H3} size={Size::XXLarge}>
-                  {"Create a Policy"}
-                </Title>
-              </CardHeader>
-              <CardBody>
-                <CreatePolicy />
-              </CardBody>
-            </Card>
-          </StackItem>
-          <StackItem>
-            <Card>
-              <CardHeader>
-                <Title level={Level::H3} size={Size::XXLarge}>
-                  {"List Policies"}
-                </Title>
-              </CardHeader>
-              <CardBody>
-                <ListPolicies />
-              </CardBody>
-            </Card>
-          </StackItem>
-        </Stack>
-      },
-      Some(AppRoute::ContractDefinitions) => html! {
-        <Stack gutter=true>
-          <StackItem>
-            <Card>
-              <CardHeader>
-                <Title level={Level::H3} size={Size::XXLarge}>
-                  {"Create a Contract Definition"}
-                </Title>
-              </CardHeader>
-              <CardBody>
-                <CreateContractDefinition />
-              </CardBody>
-            </Card>
-          </StackItem>
-          <StackItem>
-            <Card>
-              <CardHeader>
-                <Title level={Level::H3} size={Size::XXLarge}>
-                  {"List Contract Definitions"}
-                </Title>
-              </CardHeader>
-              <CardBody>
-                <ListContractDefinitions />
-              </CardBody>
-            </Card>
-          </StackItem>
-        </Stack>
-      },
-      Some(AppRoute::ContractNegotiations) => html! {
-        <Stack gutter=true>
-          <StackItem>
-            <Card>
-              <CardHeader>
-                <Title level={Level::H3} size={Size::XXLarge}>
-                  {"Create a Contract Negotiation"}
-                </Title>
-              </CardHeader>
-              <CardBody>
-                <CreateContractNegotiation />
-              </CardBody>
-            </Card>
-          </StackItem>
-          <StackItem>
-            <Card>
-              <CardHeader>
-                <Title level={Level::H3} size={Size::XXLarge}>
-                  {"List Contract Negotiations"}
-                </Title>
-              </CardHeader>
-              <CardBody>
-                <ListContractNegotiations />
-              </CardBody>
-            </Card>
-          </StackItem>
-        </Stack>
-      },
-      Some(AppRoute::ContractAgreements) => html! {
-        <Card>
-          <CardHeader>
-            <Title level={Level::H3} size={Size::XXLarge}>
-              {"List Contract Agreements"}
-            </Title>
-          </CardHeader>
-          <CardBody>
-            <ListContractAgreements />
-          </CardBody>
-        </Card>
-      },
-      Some(AppRoute::TransferProcesses) => html! {
-        <Stack gutter=true>
-          <StackItem>
-            <Card>
-              <CardHeader>
-                <Title level={Level::H3} size={Size::XXLarge}>
-                  {"Create a Transfer Process"}
-                </Title>
-              </CardHeader>
-              <CardBody>
-                <CreateTransferProcess />
-              </CardBody>
-            </Card>
-          </StackItem>
-          <StackItem>
-            <Card>
-              <CardHeader>
-                <Title level={Level::H3} size={Size::XXLarge}>
-                  {"List Transfer Processes"}
-                </Title>
-              </CardHeader>
-              <CardBody>
-                <ListTransferProcesses />
-              </CardBody>
-            </Card>
-          </StackItem>
-        </Stack>
-      },
+      None | Some(AppRoute::Assets) => html! { <AssetPage /> },
+      Some(AppRoute::Policies) => html! { <PolicyPage /> },
+      Some(AppRoute::ContractDefinitions) => html! { <ContractDefinitionPage /> },
+      Some(AppRoute::ContractNegotiations) => html! { <ContractNegotiationPage /> },
+      Some(AppRoute::ContractAgreements) => html! { <ContractAgreementPage /> },
+      Some(AppRoute::TransferProcesses) => html! { <TransferProcessPage /> },
     };
 
+    let tools = html!(
+      <Toolbar>
+        <ToolbarContent>
+          <ToolbarGroup
+            modifiers={ToolbarElementModifier::End.all()}
+            variant={GroupVariant::IconButton}
+          >
+            <ToolbarItem>
+              <ToggleTheme />
+            </ToolbarItem>
+          </ToolbarGroup>
+        </ToolbarContent>
+      </Toolbar>
+    );
+
     html!(
-      <Page {brand} {sidebar} full_height=true>
-        <PageSection>
-          {page}
-        </PageSection>
+      <Page {brand} {sidebar} {tools} full_height=true>
+        <PageSection>{ page }</PageSection>
       </Page>
     )
+  }
+
+  #[cfg(target_arch = "wasm32")]
+  static COOKIE_NAME: &str = "X-EDC-Web-UI-Theme";
+  #[cfg(target_arch = "wasm32")]
+  static DARK_THEME_VALUE: &str = "edc-web-ui-dark";
+
+  #[component]
+  pub fn ToggleTheme() -> Html {
+    let is_dark_theme = use_state(get_is_dark_theme_from_cookie);
+    let on_theme_switch = use_callback(is_dark_theme.setter(), |_, is_dark_theme| {
+      toggle_theme();
+      is_dark_theme.set(get_is_dark_theme_from_cookie());
+    });
+
+    use_effect_with((), |_| {
+      init_page_dark_light_theme();
+    });
+
+    let label = if *is_dark_theme {
+      "Dark Theme"
+    } else {
+      "Light Theme"
+    };
+
+    html!(<Switch onchange={on_theme_switch} checked={get_is_dark_theme_from_cookie()} {label} />)
+  }
+
+  pub(crate) fn get_is_dark_theme_from_cookie() -> bool {
+    #[cfg(target_arch = "wasm32")]
+    if let Some(Ok(value)) = wasm_cookies::get(COOKIE_NAME) {
+      value == DARK_THEME_VALUE
+    } else {
+      false
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    false
+  }
+
+  pub fn toggle_theme() {
+    #[cfg(target_arch = "wasm32")]
+    wasm_cookies::set(
+      COOKIE_NAME,
+      if get_is_dark_theme_from_cookie() {
+        "li-light"
+      } else {
+        DARK_THEME_VALUE
+      },
+      &wasm_cookies::CookieOptions::default(),
+    );
+
+    init_page_dark_light_theme();
+  }
+
+  pub fn init_page_dark_light_theme() {
+    let document_element = gloo_utils::document_element();
+
+    let class = if get_is_dark_theme_from_cookie() {
+      "pf-v6-theme-dark"
+    } else {
+      Default::default()
+    };
+
+    document_element.set_class_name(class);
   }
 }

@@ -14,7 +14,7 @@ pub struct Props {
   pub ondelete: Callback<usize>,
 }
 
-#[function_component]
+#[component]
 pub fn Rule(props: &Props) -> Html {
   let action = use_state(|| props.action.clone());
   let constraints = use_state(|| props.constraints.clone());
@@ -114,7 +114,7 @@ pub fn Rule(props: &Props) -> Html {
               right_operand={atomic_constraint.right_operand.0.clone()}
               onchange={update_constraint.clone()}
               ondelete={delete_constraint.clone()}
-              />
+            />
           )
         }
         Constraint::MultiplicityConstraint(_) => {
@@ -122,11 +122,7 @@ pub fn Rule(props: &Props) -> Html {
         }
       };
 
-      html_nested!(
-        <StackItem>
-          {inner}
-        </StackItem>
-      )
+      html_nested!(<StackItem>{ inner }</StackItem>)
     });
 
   let (action_is_simple, action_value) = match (*action).clone() {
@@ -136,14 +132,10 @@ pub fn Rule(props: &Props) -> Html {
 
   html!(
     <Stack gutter=true>
-      {for list_of_constraints}
+      { for list_of_constraints }
       <StackItem>
-        <Button
-          icon={Icon::Plus}
-          variant={ButtonVariant::Primary}
-          onclick={add_constraint}
-          >
-          {"Add Constraint"}
+        <Button icon={Icon::Plus} variant={ButtonVariant::Primary} onclick={add_constraint}>
+          { "Add Constraint" }
         </Button>
       </StackItem>
       <StackItem>
@@ -151,15 +143,11 @@ pub fn Rule(props: &Props) -> Html {
           onchange={onchange_action}
           is_simple={action_is_simple}
           value={action_value}
-          />
+        />
       </StackItem>
       <StackItem>
-        <Button
-          icon={Icon::Trash}
-          variant={ButtonVariant::DangerSecondary}
-          onclick={delete_rule}
-          >
-          {"Delete rule"}
+        <Button icon={Icon::Trash} variant={ButtonVariant::DangerSecondary} onclick={delete_rule}>
+          { "Delete rule" }
         </Button>
       </StackItem>
     </Stack>

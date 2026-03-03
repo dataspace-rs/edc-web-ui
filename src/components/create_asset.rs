@@ -5,8 +5,14 @@ use std::collections::HashMap;
 use yew::platform::spawn_local;
 use yew::prelude::*;
 
-#[function_component]
-pub fn CreateAsset() -> Html {
+#[derive(Clone, Debug, PartialEq, Properties)]
+pub struct CreateAssetProps {
+  #[prop_or_default]
+  pub on_create: Callback<()>,
+}
+
+#[component]
+pub fn CreateAsset(props: &CreateAssetProps) -> Html {
   let edc_connector_context = use_edc_connector_context();
 
   let identifier = use_state(|| "".to_string());
@@ -31,6 +37,7 @@ pub fn CreateAsset() -> Html {
       proxy_method.clone(),
       proxy_body.clone(),
       headers.clone(),
+      props.on_create.clone(),
     ),
     |event: SubmitEvent,
      (
@@ -44,6 +51,7 @@ pub fn CreateAsset() -> Html {
       proxy_method,
       proxy_body,
       headers,
+      on_create,
     )| {
       event.prevent_default();
 
@@ -57,6 +65,7 @@ pub fn CreateAsset() -> Html {
       let proxy_body = **proxy_body;
       let headers = (**headers).clone();
       let edc_connector_context = edc_connector_context.clone();
+      let on_create = on_create.clone();
 
       spawn_local(async move {
         let mut data_address_builder = DataAddress::builder()
@@ -84,167 +93,92 @@ pub fn CreateAsset() -> Html {
           .build();
 
         if let Some(client) = edc_connector_context.get_client() {
-          let _ = client.assets().create(&new_asset).await;
+          if let Err(error) = client.assets().create(&new_asset).await {
+            log::error!("Error creating asset: {}", error);
+          } else {
+            on_create.emit(());
+          }
         }
       })
     },
   );
 
-  let onchange_identifier = {
-    let identifier = identifier.clone();
+  let onchange_identifier = use_callback(identifier.setter(), |value, identifier_setter| {
+    identifier_setter.set(value);
+  });
 
-    use_callback((), move |value, _| {
-      identifier.set(value);
-    })
-  };
+  let onchange_name = use_callback(name.setter(), |value, name_setter| {
+    name_setter.set(value);
+  });
 
-  let onchange_name = {
-    let name = name.clone();
+  let onchange_base_url = use_callback(base_url.setter(), |value, base_url_setter| {
+    base_url_setter.set(value);
+  });
 
-    use_callback((), move |value, _| {
-      name.set(value);
-    })
-  };
+  let onchange_content_type = use_callback(content_type.setter(), |value, content_type_setter| {
+    content_type_setter.set(value);
+  });
 
-  let onchange_base_url = {
-    let base_url = base_url.clone();
+  let onchange_proxy_path = use_callback(proxy_path.setter(), |value, proxy_path_setter| {
+    proxy_path_setter.set(value);
+  });
 
-    use_callback((), move |value, _| {
-      base_url.set(value);
-    })
-  };
+  let onchange_proxy_query_params = use_callback(
+    proxy_query_params.setter(),
+    |value, proxy_query_params_setter| {
+      proxy_query_params_setter.set(value);
+    },
+  );
 
-  let onchange_content_type = {
-    let content_type = content_type.clone();
+  let onchange_proxy_method = use_callback(proxy_method.setter(), |value, proxy_method_setter| {
+    proxy_method_setter.set(value);
+  });
 
-    use_callback((), move |value, _| {
-      content_type.set(value);
-    })
-  };
-
-  let onchange_proxy_path = {
-    let proxy_path = proxy_path.clone();
-
-    use_callback((), move |value, _| {
-      proxy_path.set(value);
-    })
-  };
-
-  let onchange_proxy_query_params = {
-    let proxy_query_params = proxy_query_params.clone();
-
-    use_callback((), move |value, _| {
-      proxy_query_params.set(value);
-    })
-  };
-
-  let onchange_proxy_method = {
-    let proxy_method = proxy_method.clone();
-
-    use_callback((), move |value, _| {
-      proxy_method.set(value);
-    })
-  };
-
-  let onchange_proxy_body = {
-    let proxy_body = proxy_body.clone();
-
-    use_callback((), move |value, _| {
-      proxy_body.set(value);
-    })
-  };
+  let onchange_proxy_body = use_callback(proxy_body.setter(), |value, proxy_body_setter| {
+    proxy_body_setter.set(value);
+  });
 
   let disabled = false;
 
   html!(
     <Form {onsubmit}>
-      <FormGroup
-        label={"Identifier"}
-        required={true}
-        >
-        <TextInput
-          required={true}
-          value={(*identifier).to_string()}
-          onchange={onchange_identifier}
-          />
+      <FormGroup label="Identifier" required=true>
+        <TextInput required=true value={(*identifier).to_string()} onchange={onchange_identifier} />
       </FormGroup>
-
-      <FormGroup
-        label={"Name"}
-        required={true}
-        >
-        <TextInput
-          required={true}
-          value={(*name).to_string()}
-          onchange={onchange_name}
-          />
+      <FormGroup label="Name" required=true>
+        <TextInput required=true value={(*name).to_string()} onchange={onchange_name} />
       </FormGroup>
-
-      <FormGroup
-        label={"Base URL"}
-        required={true}
-        >
+      <FormGroup label="Base URL" required=true>
         <TextInput
-          required={true}
+          required=true
           value={(*base_url).to_string()}
           onchange={onchange_base_url}
           r#type={TextInputType::Url}
-          />
+        />
       </FormGroup>
-
-      <FormGroup
-        label={"Content Type"}
-        >
-        <TextInput
-          value={(*content_type).to_string()}
-          onchange={onchange_content_type}
-          />
+      <FormGroup label="Content Type">
+        <TextInput value={(*content_type).to_string()} onchange={onchange_content_type} />
       </FormGroup>
-
-      <FormGroup
-        label={"Proxy Path"}
-        >
-        <Switch
-          checked={*proxy_path}
-          onchange={onchange_proxy_path}
-          />
+      <FormGroup label="Proxy Path">
+        <Switch checked={*proxy_path} onchange={onchange_proxy_path} />
       </FormGroup>
-
-      <FormGroup
-        label={"Proxy Query Parameters"}
-        >
-        <Switch
-          checked={*proxy_query_params}
-          onchange={onchange_proxy_query_params}
-          />
+      <FormGroup label="Proxy Query Parameters">
+        <Switch checked={*proxy_query_params} onchange={onchange_proxy_query_params} />
       </FormGroup>
-
-      <FormGroup
-        label={"Proxy Method"}
-        >
-        <Switch
-          checked={*proxy_method}
-          onchange={onchange_proxy_method}
-          />
+      <FormGroup label="Proxy Method">
+        <Switch checked={*proxy_method} onchange={onchange_proxy_method} />
       </FormGroup>
-
-      <FormGroup
-        label={"Proxy Body"}
-        >
-        <Switch
-          checked={*proxy_body}
-          onchange={onchange_proxy_body}
-          />
+      <FormGroup label="Proxy Body">
+        <Switch checked={*proxy_body} onchange={onchange_proxy_body} />
       </FormGroup>
-
       <ActionGroup>
         <Button
           variant={ButtonVariant::Primary}
           label="Submit"
           r#type={ButtonType::Submit}
           {disabled}
-          />
-        <Button variant={ButtonVariant::Secondary} label="Reset" r#type={ButtonType::Reset}/>
+        />
+        <Button variant={ButtonVariant::Secondary} label="Reset" r#type={ButtonType::Reset} />
       </ActionGroup>
     </Form>
   )

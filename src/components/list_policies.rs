@@ -1,50 +1,20 @@
-use crate::contexts::use_edc_connector_context;
-use edc_connector_client::types::policy::{PolicyDefinition, PolicyKind};
-use edc_connector_client::types::query::Query;
+use crate::models::PolicyDefinitionItem;
 use patternfly_yew::prelude::*;
 use std::rc::Rc;
-use yew::platform::spawn_local;
 use yew::prelude::*;
-use yew::suspense::use_future_with;
 
-#[function_component]
-pub fn ListPolicies() -> Html {
-  let fallback = html!("Loading ...");
-
-  html!(
-    <Suspense {fallback}>
-      <ListPoliciesInner />
-    </Suspense>
-  )
+#[derive(Clone, Debug, PartialEq, Properties)]
+pub struct ListPoliciesProps {
+  pub policy_definition_items: Vec<PolicyDefinitionItem>,
+  pub offset: usize,
+  pub limit: usize,
+  pub onoffset: Callback<usize>,
+  pub onlimit: Callback<usize>,
+  pub ondelete: Callback<String>,
 }
 
-#[function_component]
-pub fn ListPoliciesInner() -> HtmlResult {
-  let edc_connector_context = use_edc_connector_context();
-
-  let offset = use_state(|| 0usize);
-  let limit = use_state(|| 10usize);
-
-  let policy_list = use_future_with(
-    (edc_connector_context, *limit, *offset),
-    |parameters| async move {
-      let (edc_connector_context, limit, offset) = &*parameters;
-
-      let query = Query::builder()
-        .limit(*limit as u32)
-        .offset(*offset as u32)
-        .build();
-
-      if let Some(client) = edc_connector_context.get_client() {
-        client.policies().query(query).await
-      } else {
-        Ok(vec![])
-      }
-    },
-  )?;
-
-  let policy_list = &(*policy_list);
-
+#[component]
+pub fn ListPolicies(props: &ListPoliciesProps) -> Html {
   let header = html_nested! {
     <TableHeader<Columns>>
       <TableColumn<Columns> label="ID" index={Columns::Id} />
@@ -55,57 +25,60 @@ pub fn ListPoliciesInner() -> HtmlResult {
     </TableHeader<Columns>>
   };
 
-  let limit_callback = use_callback(limit.clone(), |number, limit| limit.set(number));
-
   let total_entries: Option<usize> = None;
 
   let nav_callback = use_callback(
-    (offset.clone(), *limit, total_entries),
-    |page: Navigation, (offset, limit, total_entries)| {
-      let o = match page {
+    (
+      props.offset,
+      props.limit,
+      total_entries,
+      props.onoffset.clone(),
+    ),
+    |page: Navigation, (offset, limit, total_entries, onoffset)| {
+      let offset = match page {
         Navigation::First => 0,
         Navigation::Last => (total_entries.unwrap_or_default().saturating_sub(1) / limit) * limit,
-        Navigation::Previous => **offset - limit,
-        Navigation::Next => **offset + limit,
+        Navigation::Previous => *offset - limit,
+        Navigation::Next => *offset + limit,
         Navigation::Page(n) => n * limit,
       };
-      offset.set(o);
+      onoffset.emit(offset);
     },
   );
 
-  let rows = policy_list
-    .as_ref()
-    .unwrap()
+  let rows = props
+    .policy_definition_items
     .iter()
-    .map(|policy| PolicyRenderer(policy.clone()))
+    .map(|policy_definition_item| PolicyDefinitionItemRenderer {
+      policy_definition_item: policy_definition_item.clone(),
+      ondelete: props.ondelete.clone(),
+    })
     .collect();
 
   let (entries, _) = use_table_data(MemoizedTableModel::new(Rc::new(rows)));
 
-  let table = html!(
+  html!(
     <>
       <Toolbar>
         <ToolbarContent>
           <ToolbarItem r#type={ToolbarItemType::Pagination}>
             <Pagination
-              offset={*offset}
+              offset={props.offset}
               entries_per_page_choices={vec![5, 10, 25, 50, 100]}
-              selected_choice={*limit}
-              onlimit={&limit_callback}
+              selected_choice={props.limit}
+              onlimit={&props.onlimit}
               onnavigation={&nav_callback}
             />
           </ToolbarItem>
         </ToolbarContent>
       </Toolbar>
-      <Table<Columns, UseTableData<Columns, MemoizedTableModel<PolicyRenderer>>>
+      <Table<Columns, UseTableData<Columns, MemoizedTableModel<PolicyDefinitionItemRenderer>>>
         mode={TableMode::Compact}
         {header}
         {entries}
-        />
+      />
     </>
-  );
-
-  Ok(table)
+  )
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -118,45 +91,35 @@ enum Columns {
 }
 
 #[derive(Clone, Debug)]
-struct PolicyRenderer(PolicyDefinition);
+struct PolicyDefinitionItemRenderer {
+  policy_definition_item: PolicyDefinitionItem,
+  ondelete: Callback<String>,
+}
 
-impl TableEntryRenderer<Columns> for PolicyRenderer {
+impl TableEntryRenderer<Columns> for PolicyDefinitionItemRenderer {
   fn render_cell(&self, context: CellContext<'_, Columns>) -> Cell {
     match context.column {
-      Columns::Id => html! {self.0.id().to_string()},
-      Columns::Kind => {
-        let kind = match self.0.policy().kind() {
-          PolicyKind::Agreement => "Agreement",
-          PolicyKind::Offer => "Offer",
-          PolicyKind::Set => "Set",
-        };
-
-        html!({ kind })
-      }
+      Columns::Id => html! { self.policy_definition_item.id.to_string() },
+      Columns::Kind => html! { self.policy_definition_item.kind.to_string() },
       Columns::Assignee => html!(
         self
-          .0
-          .policy()
-          .assignee()
-          .cloned()
+          .policy_definition_item
+          .assignee
+          .clone()
           .unwrap_or_default()
-          .to_string()
       ),
       Columns::Assigner => html!(
         self
-          .0
-          .policy()
-          .assigner()
-          .cloned()
+          .policy_definition_item
+          .assigner
+          .clone()
           .unwrap_or_default()
-          .to_string()
       ),
       Columns::Actions => {
-        let policy_id = self.0.id().to_string();
+        let policy_id = self.policy_definition_item.id.to_string();
+        let ondelete = self.ondelete.clone();
 
-        html!(
-          <DeletePolicy {policy_id} />
-        )
+        html!(<DeletePolicy {policy_id} {ondelete} />)
       }
     }
     .into()
@@ -166,33 +129,17 @@ impl TableEntryRenderer<Columns> for PolicyRenderer {
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {
   pub policy_id: String,
+  pub ondelete: Callback<String>,
 }
 
 #[function_component]
 pub fn DeletePolicy(props: &Props) -> Html {
-  let edc_connector_context = use_edc_connector_context();
-
   let onclick = use_callback(
-    (edc_connector_context, props.policy_id.clone()),
-    move |_, (edc_connector_context, policy_id)| {
-      let edc_connector_context = edc_connector_context.clone();
-      let policy_id = policy_id.to_string();
-
-      spawn_local(async move {
-        if let Some(client) = edc_connector_context.get_client() {
-          let _ = client.policies().delete(&policy_id).await;
-        }
-      });
+    (props.ondelete.clone(), props.policy_id.clone()),
+    move |_, (ondelete, policy_id)| {
+      ondelete.emit(policy_id.clone());
     },
   );
 
-  html!(
-    <Button
-      variant={ButtonVariant::Danger}
-      icon={Icon::Trash}
-      {onclick}
-      >
-      {"Delete"}
-    </Button>
-  )
+  html!(<Button variant={ButtonVariant::Danger} icon={Icon::Trash} {onclick}>{ "Delete" }</Button>)
 }

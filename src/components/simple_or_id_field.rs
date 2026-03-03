@@ -8,7 +8,7 @@ pub struct Props {
   pub onchange: Callback<(bool, String)>,
 }
 
-#[function_component]
+#[component]
 pub fn SimpleOrIdField(props: &Props) -> Html {
   let is_simple_target = use_state(|| props.is_simple);
   let target = use_state(|| props.value.clone());
@@ -54,16 +54,13 @@ pub fn SimpleOrIdField(props: &Props) -> Html {
   html!(
     <Split>
       <SplitItem>
-        <Dropdown text={target_mode}>
-          <MenuAction onclick={on_target_simple}>{"Simple"}</MenuAction>
-          <MenuAction onclick={on_target_id}>{"ID"}</MenuAction>
+        <Dropdown text={html!(target_mode)}>
+          <MenuAction onclick={on_target_simple}>{ "Simple" }</MenuAction>
+          <MenuAction onclick={on_target_id}>{ "ID" }</MenuAction>
         </Dropdown>
       </SplitItem>
       <SplitItem fill=true>
-        <TextInput
-          value={(*target).clone()}
-          onchange={oninput_target}
-          />
+        <TextInput value={(*target).clone()} onchange={oninput_target} />
       </SplitItem>
     </Split>
   )

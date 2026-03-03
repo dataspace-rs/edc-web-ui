@@ -16,8 +16,14 @@ enum Options {
   Set,
 }
 
-#[function_component]
-pub fn CreatePolicy() -> Html {
+#[derive(Clone, Debug, PartialEq, Properties)]
+pub struct CreatePolicyProps {
+  #[prop_or_default]
+  pub on_create: Callback<()>,
+}
+
+#[component]
+pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
   let edc_connector_context = use_edc_connector_context();
 
   let identifier = use_state(String::new);
@@ -40,6 +46,7 @@ pub fn CreatePolicy() -> Html {
       permissions.clone(),
       prohibitions.clone(),
       obligations.clone(),
+      props.on_create.clone(),
     ),
     |event: SubmitEvent,
      (
@@ -52,6 +59,7 @@ pub fn CreatePolicy() -> Html {
       permissions,
       prohibitions,
       obligations,
+      on_create,
     )| {
       event.prevent_default();
 
@@ -91,6 +99,8 @@ pub fn CreatePolicy() -> Html {
             .build()
         })
         .collect();
+
+      let on_create = on_create.clone();
 
       spawn_local(async move {
         let kind = match kind {
@@ -136,71 +146,62 @@ pub fn CreatePolicy() -> Html {
 
         if let Some(client) = edc_connector_context.get_client() {
           let _ = client.policies().create(&new_policy).await;
+          on_create.emit(());
         }
       })
     },
   );
 
-  let onchange_identifier = {
-    let identifier = identifier.clone();
+  let onchange_identifier =
+    use_callback(identifier.setter(), move |identifier, identifier_setter| {
+      identifier_setter.set(identifier);
+    });
 
-    use_callback((), move |value, _| {
-      identifier.set(value);
-    })
-  };
+  let onselect_kind = use_callback(kind.setter(), move |kind, kind_setter| {
+    kind_setter.set(kind);
+  });
 
-  let onselect_kind = {
-    let kind = kind.clone();
+  let onchange_assignee = use_callback(
+    assignee.setter(),
+    move |assignee: String, assignee_setter| {
+      assignee_setter.set(assignee);
+    },
+  );
 
-    use_callback((), move |value, _| {
-      kind.set(value);
-    })
-  };
+  let onchange_assigner = use_callback(
+    assigner.setter(),
+    move |assigner: String, assigner_setter| {
+      assigner_setter.set(assigner);
+    },
+  );
 
-  let onchange_assignee = {
-    let assignee = assignee.clone();
+  let onchange_target = use_callback(
+    target.setter(),
+    move |target: (bool, String), target_setter| {
+      target_setter.set(target);
+    },
+  );
 
-    use_callback((), move |value: String, _| {
-      assignee.set(value);
-    })
-  };
+  let onchange_permissions = use_callback(
+    permissions.setter(),
+    move |permissions, permissions_setter| {
+      permissions_setter.set(permissions);
+    },
+  );
 
-  let onchange_assigner = {
-    let assigner = assigner.clone();
+  let onchange_prohibitions = use_callback(
+    prohibitions.setter(),
+    move |prohibitions, prohibitions_setter| {
+      prohibitions_setter.set(prohibitions);
+    },
+  );
 
-    use_callback((), move |value: String, _| {
-      assigner.set(value);
-    })
-  };
-
-  let onchange_target = {
-    let target = target.clone();
-
-    use_callback((), move |value: (bool, String), _| {
-      target.set(value);
-    })
-  };
-
-  let onchange_permissions = {
-    let permissions = permissions.clone();
-    use_callback((), move |list, _| {
-      permissions.set(list);
-    })
-  };
-
-  let onchange_prohibitions = {
-    let prohibitions = prohibitions.clone();
-    use_callback((), move |list, _| {
-      prohibitions.set(list);
-    })
-  };
-
-  let onchange_obligations = {
-    let obligations = obligations.clone();
-    use_callback((), move |list, _| {
-      obligations.set(list);
-    })
-  };
+  let onchange_obligations = use_callback(
+    obligations.setter(),
+    move |obligations, obligations_setter| {
+      obligations_setter.set(obligations);
+    },
+  );
 
   let (target_is_simple, target_value) = (*target).clone();
 
@@ -208,87 +209,46 @@ pub fn CreatePolicy() -> Html {
 
   html!(
     <Form {onsubmit}>
-      <FormGroup
-        label={"Identifier"}
-        required={true}
-        >
-        <TextInput
-          required={true}
-          value={(*identifier).to_string()}
-          onchange={onchange_identifier}
-          />
+      <FormGroup label="Identifier" required=true>
+        <TextInput required=true value={(*identifier).to_string()} onchange={onchange_identifier} />
       </FormGroup>
-
-      <FormGroup
-        label={"Kind"}
-        required={true}
-        >
+      <FormGroup label="Kind" required=true>
         <SimpleSelect<Options>
           selected={*kind}
           onselect={onselect_kind}
           entries={vec![Options::Agreement, Options::Offer, Options::Set]}
-          />
+        />
       </FormGroup>
-
-      <FormGroup
-        label={"Permissions"}
-        >
-        <ListOfRules
-          list={(*permissions).clone()}
-          onchange={onchange_permissions}
-          />
+      <FormGroup label="Permissions">
+        <ListOfRules list={(*permissions).clone()} onchange={onchange_permissions} />
       </FormGroup>
-
-      <FormGroup
-        label={"Prohibitions"}
-        >
-        <ListOfRules
-          list={(*prohibitions).clone()}
-          onchange={onchange_prohibitions}
-          />
+      <FormGroup label="Prohibitions">
+        <ListOfRules list={(*prohibitions).clone()} onchange={onchange_prohibitions} />
       </FormGroup>
-
-      <FormGroup
-        label={"Obligations"}
-        >
-        <ListOfRules
-          list={(*obligations).clone()}
-          onchange={onchange_obligations}
-          />
+      <FormGroup label="Obligations">
+        <ListOfRules list={(*obligations).clone()} onchange={onchange_obligations} />
       </FormGroup>
-
-      <FormGroup
-        label={"Assignee"}
-        >
-        <TextInput
-          value={(*assignee).clone()}
-          onchange={onchange_assignee}
-          />
+      <FormGroup label="Assignee">
+        <TextInput value={(*assignee).clone()} onchange={onchange_assignee} />
       </FormGroup>
-
-      <FormGroup
-        label={"Assigner"}
-        >
-        <TextInput
-          value={(*assigner).clone()}
-          onchange={onchange_assigner}
-          />
+      <FormGroup label="Assigner">
+        <TextInput value={(*assigner).clone()} onchange={onchange_assigner} />
       </FormGroup>
-
-      <FormGroup
-        label={"Target"}
-        >
-        <SimpleOrIdField onchange={onchange_target} is_simple={target_is_simple} value={target_value} />
+      <FormGroup label="Target">
+        <SimpleOrIdField
+          onchange={onchange_target}
+          is_simple={target_is_simple}
+          value={target_value}
+        />
       </FormGroup>
-
       <ActionGroup>
         <Button
           variant={ButtonVariant::Primary}
           label="Submit"
           r#type={ButtonType::Submit}
           {disabled}
-          />
-        <Button variant={ButtonVariant::Secondary} label="Reset" r#type={ButtonType::Reset}/>
+        />
+        <Button variant={ButtonVariant::Secondary} label="Reset" r#type={ButtonType::Reset} />
       </ActionGroup>
     </Form>
   )
