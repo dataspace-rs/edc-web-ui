@@ -88,6 +88,38 @@ jobs:
           command: doc
           args: --no-deps --document-private-items --all-features --workspace --examples
 
+  publish:
+    name: "Publish on github website"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.92.0
+          profile: minimal
+          override: true
+
+      - name: Install trunk
+        run: cargo install --git https://github.com/luminvent/trunk.git --rev 9d37e0a521cb6562f8b8db9be64c08aaa812617b trunk
+
+      - name: Build page
+        run: trunk build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
 
   docker-image:
     name: "Build and push images"
