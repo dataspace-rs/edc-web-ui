@@ -47,20 +47,21 @@ pub fn CreateContractNegotiation(props: &CreateContractNegotiationProps) -> Html
       spawn_local(async move {
         if let Some(policy_definition_item) = policy_definition_item
           && let Some(client) = edc_connector_context.get_client()
-            && let Ok(policy_definition) = client.policies().get(&policy_definition_item.id).await {
-              let contract_request = ContractRequest::builder()
-                .counter_party_address(counter_party_address)
-                .counter_party_id(counter_party_id)
-                .policy(policy_definition.policy().clone())
-                .build();
+          && let Ok(policy_definition) = client.policies().get(&policy_definition_item.id).await
+        {
+          let contract_request = ContractRequest::builder()
+            .counter_party_address(counter_party_address)
+            .counter_party_id(counter_party_id)
+            .policy(policy_definition.policy().clone())
+            .build();
 
-              let _ = client
-                .contract_negotiations()
-                .initiate(&contract_request)
-                .await;
+          let _ = client
+            .contract_negotiations()
+            .initiate(&contract_request)
+            .await;
 
-              oncreate.emit(());
-            }
+          oncreate.emit(());
+        }
       })
     },
   );
