@@ -20,7 +20,7 @@ impl From<ContractNegotiation> for ContractNegotiationItem {
       .contract_agreement_id()
       .map(|contract_agreement_id| contract_agreement_id.to_string())
       .unwrap_or_default();
-    let counter_party_id = contract_negotiation.counter_party_id().to_string();
+    let counter_party_id = contract_negotiation.counter_party_id().clone().unwrap_or_default();
     let counter_party_address = contract_negotiation.counter_party_address().to_string();
     let protocol = contract_negotiation.protocol().to_string();
     let kind = ContractNegotiationKind::from(contract_negotiation.kind()).to_string();

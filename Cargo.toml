@@ -13,7 +13,7 @@ readme = "README.md"
 chrono = "0.4"
 console_error_panic_hook = "0.1"
 console_log = "1"
-edc-connector-client = { version = "0.5", package = "edc-connector-client-next" }
+edc-connector-client = { version = "0.5.2", package = "edc-connector-client-next" }
 fern = "0.7"
 log = "0.4.27"
 patternfly-yew = { version = "0.7", features = ["experimental"] }
