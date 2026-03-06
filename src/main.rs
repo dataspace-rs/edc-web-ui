@@ -26,21 +26,22 @@ mod main_application {
   use wasm_cookies::CookieOptions;
   use yew::platform::spawn_local;
   use yew::prelude::*;
-  use yew_router::{BrowserRouter, Routable};
+  use yew_nested_router::prelude::Switch as RouterSwitch;
+  use yew_nested_router::{Router, Target};
 
-  #[derive(Debug, Clone, Copy, PartialEq, Routable)]
+  #[derive(Debug, Clone, Copy, PartialEq, Target, Eq)]
   enum AppRoute {
-    #[at("/")]
+    #[target(rename = "assets")]
     Assets,
-    #[at("/policies")]
+    #[target(rename = "policies")]
     Policies,
-    #[at("/contract-definitions")]
+    #[target(rename = "contract-definitions")]
     ContractDefinitions,
-    #[at("/contract-negotiations")]
+    #[target(rename = "contract-negotiations")]
     ContractNegotiations,
-    #[at("/contract-agreements")]
+    #[target(rename = "contract-agreements")]
     ContractAgreements,
-    #[at("/transfer-processes")]
+    #[target(rename = "transfer-processes")]
     TransferProcesses,
   }
 
@@ -144,13 +145,13 @@ mod main_application {
       };
 
       html!(
-        <BrowserRouter>
+        <Router<AppRoute> default={AppRoute::Assets}>
           <EdcConnectorContextProvider {management_url} {api_key}>
             <BackdropViewer>
               <MainView {onlogout} />
             </BackdropViewer>
           </EdcConnectorContextProvider>
-        </BrowserRouter>
+        </Router<AppRoute>>
       )
     } else {
       html!(
@@ -220,47 +221,30 @@ mod main_application {
       </>
     );
 
-    let navigator = yew_router::hooks::use_navigator();
-
-    let go_to = use_callback(navigator.clone(), |app_route, navigator| {
-      if let Some(navigator) = navigator {
-        navigator.push(&app_route);
-      }
-    });
-
     let sidebar = html_nested!(
       <PageSidebar>
         <Nav>
           <NavList>
-            <NavItem onclick={go_to.reform(|_| AppRoute::Assets)}>{ "Assets" }</NavItem>
-            <NavItem onclick={go_to.reform(|_| AppRoute::Policies)}>{ "Policies" }</NavItem>
-            <NavItem onclick={go_to.reform(|_| AppRoute::ContractDefinitions)}>
+            <NavRouterItem<AppRoute> to={AppRoute::Assets}>{ "Assets" }</NavRouterItem<AppRoute>>
+            <NavRouterItem<AppRoute> to={AppRoute::Policies}>
+              { "Policies" }
+            </NavRouterItem<AppRoute>>
+            <NavRouterItem<AppRoute> to={AppRoute::ContractDefinitions}>
               { "Contract Definitions" }
-            </NavItem>
-            <NavItem onclick={go_to.reform(|_| AppRoute::ContractNegotiations)}>
+            </NavRouterItem<AppRoute>>
+            <NavRouterItem<AppRoute> to={AppRoute::ContractNegotiations}>
               { "Contract Negotiations" }
-            </NavItem>
-            <NavItem onclick={go_to.reform(|_| AppRoute::ContractAgreements)}>
+            </NavRouterItem<AppRoute>>
+            <NavRouterItem<AppRoute> to={AppRoute::ContractAgreements}>
               { "Contract Agreements" }
-            </NavItem>
-            <NavItem onclick={go_to.reform(|_| AppRoute::TransferProcesses)}>
+            </NavRouterItem<AppRoute>>
+            <NavRouterItem<AppRoute> to={AppRoute::TransferProcesses}>
               { "Transfer Processes" }
-            </NavItem>
+            </NavRouterItem<AppRoute>>
           </NavList>
         </Nav>
       </PageSidebar>
     );
-
-    let route = yew_router::hooks::use_route();
-
-    let page = match route {
-      None | Some(AppRoute::Assets) => html! { <AssetPage /> },
-      Some(AppRoute::Policies) => html! { <PolicyPage /> },
-      Some(AppRoute::ContractDefinitions) => html! { <ContractDefinitionPage /> },
-      Some(AppRoute::ContractNegotiations) => html! { <ContractNegotiationPage /> },
-      Some(AppRoute::ContractAgreements) => html! { <ContractAgreementPage /> },
-      Some(AppRoute::TransferProcesses) => html! { <TransferProcessPage /> },
-    };
 
     let onlogout = use_callback(props.onlogout.clone(), |_, onlogout| {
       wasm_cookies::set(
@@ -293,9 +277,22 @@ mod main_application {
 
     html!(
       <Page {brand} {sidebar} {tools} full_height=true>
-        <PageSection>{ page }</PageSection>
+        <PageSection>
+          <RouterSwitch<AppRoute> render={switch_app_route} />
+        </PageSection>
       </Page>
     )
+  }
+
+  fn switch_app_route(target: AppRoute) -> Html {
+    match target {
+      AppRoute::Assets => html! { <AssetPage /> },
+      AppRoute::Policies => html! { <PolicyPage /> },
+      AppRoute::ContractDefinitions => html! { <ContractDefinitionPage /> },
+      AppRoute::ContractNegotiations => html! { <ContractNegotiationPage /> },
+      AppRoute::ContractAgreements => html! { <ContractAgreementPage /> },
+      AppRoute::TransferProcesses => html! { <TransferProcessPage /> },
+    }
   }
 
   #[cfg(target_arch = "wasm32")]

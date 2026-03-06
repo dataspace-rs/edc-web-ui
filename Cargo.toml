@@ -24,7 +24,7 @@ wasm-cookies = "0.2"
 web-sys = "0.3"
 yew = "0.22"
 yew_icons = { version = "0.9.0", features = ["font_awesome_regular"] }
-yew-router = "0.19"
+yew-nested-router = { version = "0.8.0" }
 serde = { version = "1.0.219", features = ["derive"] }
 gloo-utils = "0.2.0"
 
